@@ -313,7 +313,8 @@ class VllmServerPanel(BackendServerPanel):
             arguments = list(self.app.toolbox_catalog.runtime_profiles[toolbox.runtime_profile].engine_args)
             toolbox = self._selected_toolbox()
             command = build_device_probe_cmd(engine, toolbox.image, arguments,
-                                             accelerator=toolbox.backend_config.get("accelerator", "cuda"))
+                                             accelerator=toolbox.backend_config.get("accelerator", "cuda"),
+                                             python_executable=toolbox.backend_config.get("python_executable", ""))
             with self.app.suspend():
                 output = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
             records = json.loads(output.splitlines()[-1])

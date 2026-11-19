@@ -242,7 +242,7 @@ def apply_device_selection(policy: dict, devices: str, tensor_parallel: int) -> 
     return dict(policy, env={**policy.get("env", {}), key: devices})
 
 
-def build_device_probe_cmd(engine: str, image: str, engine_args: list[str], *, accelerator: str = "cuda") -> list[str]:
+def build_device_probe_cmd(engine: str, image: str, engine_args: list[str], *, accelerator: str = "cuda", python_executable: str = "") -> list[str]:
     if engine not in {"podman", "docker"}:
         raise ValueError("Choose Podman or Docker")
     if accelerator not in {"cuda", "xpu"}:
@@ -252,4 +252,4 @@ def build_device_probe_cmd(engine: str, image: str, engine_args: list[str], *, a
         probe = "import json,torch; print(json.dumps([{'index':i,'name':torch.xpu.get_device_name(i),'architecture':'XPU'} for i in range(torch.xpu.device_count())]))"
         return [engine, "run", "--rm", "--network=none", *arguments, "--entrypoint", "/usr/bin/env", image, "python3", "-c", probe]
     probe = "import json,torch; print(json.dumps([{'index':i,'name':torch.cuda.get_device_name(i),'architecture':getattr(torch.cuda.get_device_properties(i),'gcnArchName','')} for i in range(torch.cuda.device_count())]))"
-    return [engine, "run", "--rm", "--network=none", *arguments, "--entrypoint", "/opt/vllm/bin/python", image, "-c", probe]
+    return [engine, "run", "--rm", "--network=none", *arguments, "--entrypoint", python_executable or "/opt/vllm/bin/python", image, "-c", probe]

@@ -1078,6 +1078,151 @@
               "args": ""
             }
           }
+        },
+        {
+          "id": "llama-bartowski-ornith-1-5-35b-a3b-gguf",
+          "name": "Ornith 1.5 35B A3B Q4_0 (Bartowski)",
+          "repo": "bartowski/Ornith-1.5-35B-A3B-GGUF",
+          "match_filename_patterns": [
+            "Ornith-1.5-35B-A3B-Q4_0.gguf"
+          ],
+          "recommended_pattern": "Ornith-1.5-35B-A3B-Q4_0.gguf",
+          "vision_projector": {
+            "patterns": [
+              "mmproj-*.gguf"
+            ]
+          },
+          "inference_profiles": {
+            "Thinking (General)": {
+              "description": "Recommended for general thinking/reasoning tasks",
+              "args": "--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            },
+            "Thinking (Coding)": {
+              "description": "Recommended for precise coding tasks (e.g. WebDev)",
+              "args": "--temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0"
+            },
+            "Instruct (General)": {
+              "description": "Recommended for general instruct (non-thinking) tasks",
+              "args": "--temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            },
+            "Instruct (Reasoning)": {
+              "description": "Recommended for instruct (non-thinking) reasoning tasks",
+              "args": "--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            }
+          },
+          "server_defaults": {
+            "context_size": 32768,
+            "batch_size": 2048,
+            "ubatch_size": 2048,
+            "parallel_sequences": 1,
+            "gpu_layers": 999,
+            "kv_cache_type": "q8_0",
+            "load_mode": "none",
+            "flash_attention": false
+          }
+        },
+        {
+          "id": "llama-bartowski-qwen3-6-35b-a3b-gguf",
+          "name": "Qwen 3.6 35B A3B Q4_0 (Bartowski)",
+          "repo": "bartowski/Qwen_Qwen3.6-35B-A3B-GGUF",
+          "match_filename_patterns": [
+            "Qwen_Qwen3.6-35B-A3B-Q4_0.gguf"
+          ],
+          "recommended_pattern": "Qwen_Qwen3.6-35B-A3B-Q4_0.gguf",
+          "vision_projector": {
+            "patterns": [
+              "mmproj-Qwen_Qwen3.6-35B-A3B-*.gguf"
+            ]
+          },
+          "inference_profiles": {
+            "Thinking (General)": {
+              "description": "Recommended for general thinking/reasoning tasks",
+              "args": "--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            },
+            "Thinking (Coding)": {
+              "description": "Recommended for precise coding tasks (e.g. WebDev)",
+              "args": "--temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0"
+            },
+            "Instruct (General)": {
+              "description": "Recommended for general instruct (non-thinking) tasks",
+              "args": "--temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            },
+            "Instruct (Reasoning)": {
+              "description": "Recommended for instruct (non-thinking) reasoning tasks",
+              "args": "--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            }
+          },
+          "mtp": {
+            "supported": true,
+            "default_draft_n": 2,
+            "default_np": 1,
+            "draft_models": [
+              "mtp-Qwen_Qwen3.6-35B-A3B-Q4_0.gguf"
+            ]
+          },
+          "auxiliary_downloads": [
+            {
+              "name": "MTP drafter (sidecar GGUF)",
+              "repo": "bartowski/Qwen_Qwen3.6-35B-A3B-GGUF",
+              "role": "mtp",
+              "recommended_filename": "mtp-Qwen_Qwen3.6-35B-A3B-Q4_0.gguf",
+              "description": "Optional MTP drafter for the mx-llama.cpp speculative build (1.19 GB)."
+            },
+            {
+              "name": "Vision projector",
+              "repo": "bartowski/Qwen_Qwen3.6-35B-A3B-GGUF",
+              "role": "vision_projector",
+              "recommended_filename": "mmproj-Qwen_Qwen3.6-35B-A3B-f16.gguf",
+              "description": "f16 vision projector (903 MB) for multimodal input."
+            }
+          ],
+          "server_defaults": {
+            "context_size": 32768,
+            "batch_size": 2048,
+            "ubatch_size": 2048,
+            "parallel_sequences": 1,
+            "gpu_layers": 999,
+            "kv_cache_type": "q8_0",
+            "load_mode": "none",
+            "flash_attention": false
+          }
+        },
+        {
+          "id": "llama-n00b001-qwen3-coder-30b-a3b-instruct-q4-0-gguf",
+          "name": "Qwen3-Coder 30B A3B Instruct Q4_0",
+          "repo": "n00b001/Qwen3-Coder-30B-A3B-Instruct-Q4_0-GGUF",
+          "match_filename_patterns": [
+            "qwen3-coder-30b-a3b-instruct-q4_0.gguf"
+          ],
+          "recommended_pattern": "qwen3-coder-30b-a3b-instruct-q4_0.gguf",
+          "inference_profiles": {
+            "Thinking (General)": {
+              "description": "Recommended for general thinking/reasoning tasks",
+              "args": "--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            },
+            "Thinking (Coding)": {
+              "description": "Recommended for precise coding tasks (e.g. WebDev)",
+              "args": "--temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0"
+            },
+            "Instruct (General)": {
+              "description": "Recommended for general instruct (non-thinking) tasks",
+              "args": "--temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            },
+            "Instruct (Reasoning)": {
+              "description": "Recommended for instruct (non-thinking) reasoning tasks",
+              "args": "--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0"
+            }
+          },
+          "server_defaults": {
+            "context_size": 32768,
+            "batch_size": 2048,
+            "ubatch_size": 2048,
+            "parallel_sequences": 1,
+            "gpu_layers": 999,
+            "kv_cache_type": "q8_0",
+            "load_mode": "none",
+            "flash_attention": false
+          }
         }
       ]
     },
@@ -2796,6 +2941,30 @@
               }
             ]
           }
+        },
+        {
+          "id": "vllm-intel-qwen3-coder-30b-a3b-int4-autoround",
+          "name": "Qwen3-Coder 30B A3B Instruct INT4 AutoRound (Intel)",
+          "repo": "Intel/Qwen3-Coder-30B-A3B-Instruct-int4-AutoRound",
+          "trust_remote": false,
+          "valid_tp": [
+            1
+          ],
+          "attention_backend": "TRITON_ATTN",
+          "ctx": "65536",
+          "env": {
+            "VLLM_ROCM_USE_AITER": "0"
+          },
+          "max_num_seqs": "8",
+          "max_tokens": "16384",
+          "gpu_memory_utilization": 0.9,
+          "extra_flags": [
+            "--enable-auto-tool-choice",
+            "--tool-call-parser",
+            "qwen3_coder",
+            "--reasoning-parser",
+            "qwen3"
+          ]
         }
       ],
       "config": {
