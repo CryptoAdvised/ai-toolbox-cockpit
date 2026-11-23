@@ -4543,6 +4543,24 @@
             }
           ]
         },
+                {
+          "id": "strata-qwen3-8-flash-next-ista-daslab-gsq-rco-coder-iq1m",
+          "name": "Qwen3.8 Flash Next · ISTA-DASLab GSQ-RCO Coder IQ1_M",
+          "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+          "revision": "d1d9467",
+          "directory": "Qwen3.8-Flash-Next-GSQ-RCO-Coder-d1d9467",
+          "recommended": false,
+          "files": [
+            {
+              "path": "IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00001-of-00002.gguf",
+              "size_bytes": 29600000000
+            },
+            {
+              "path": "IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00002-of-00002.gguf",
+              "size_bytes": 28800000000
+            }
+          ]
+        },
         {
           "id": "strata-deepseek-v41-flash-1017-gsq-iq2xxs",
           "name": "DeepSeek-V4.1-Flash-1017 \u00b7 GSQ-RCO IQ2_XXS 2.00 bpw",
