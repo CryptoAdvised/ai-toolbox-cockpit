@@ -20,7 +20,7 @@ def get_server_rdma_args(
         return []
     return container_rdma_args(engine, rdma_path)
 
-def build_server_cmd(engine: str, image: str, model_path: str, context_size: int, use_fa: bool, use_no_mmap: bool, custom_args: str, host: str = "localhost", port: str = "8080", ngl: int | None = None, hip_devices: str = "", platform_id: str = "", engine_args: list[str] = None, kv_cache_type: str = "", supports_load_mode: bool = False, api_key: str = "", vision_projector_path: str = "", draft_model_path: str = "", mtp_draft_model_path: str = "", batch_size: int | None = None, ubatch_size: int | None = None, parallel_sequences: int | None = None, load_mode: str = "", runtime_profile: str = "") -> list[str]:
+def build_server_cmd(engine: str, image: str, model_path: str, context_size: int, use_fa: bool, use_no_mmap: bool, custom_args: str, host: str = "localhost", port: str = "8080", ngl: int | None = None, hip_devices: str = "", platform_id: str = "", engine_args: list[str] = None, kv_cache_type: str = "", supports_load_mode: bool = False, api_key: str = "", vision_projector_path: str = "", draft_model_path: str = "", mtp_draft_model_path: str = "", batch_size: int | None = None, ubatch_size: int | None = None, parallel_sequences: int | None = None, load_mode: str = "", runtime_profile: str = "", server_entry: str = "llama-server") -> list[str]:
     from .model_manager import get_models_dir
     from .config import get_model_config
     config = get_model_config(model_path) or {}
@@ -120,8 +120,10 @@ def build_server_cmd(engine: str, image: str, model_path: str, context_size: int
     rel_path = os.path.relpath(actual_file, models_dir)
     inner_model_path = f"/models/{rel_path}"
 
+    if not str(server_entry).strip():
+        raise ValueError("Server entry for the selected image must not be empty")
     cmd.extend([
-        "llama-server",
+        str(server_entry),
         "-m", inner_model_path,
     ])
 

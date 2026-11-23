@@ -37,10 +37,19 @@ class CatalogTests(unittest.TestCase):
     def test_toolbox_catalog_loads_and_has_full_image_references(self) -> None:
         catalog = load_toolbox_catalog()
         self.assertEqual(catalog.schema_version, 3)
-        self.assertEqual({platform.id for platform in catalog.platforms}, {"strix-halo", "r9700", "gb10", "intel-b70"})
+        self.assertEqual({platform.id for platform in catalog.platforms}, {"strix-halo", "r9700", "gb10", "intel-b70", "mi50"})
         for toolbox in catalog.toolboxes.values():
             self.assertIn("/", toolbox.image)
             self.assertTrue(":" in toolbox.image or "@" in toolbox.image)
+
+    def test_mi50_llama_toolbox_dispatches_through_the_container_entrypoint(self) -> None:
+        catalog = load_toolbox_catalog()
+        toolbox = catalog.toolboxes["mi50-llama-rocm-10.1"]
+        self.assertEqual(
+            (toolbox.backend_config or {}).get("server_entry"), "--server"
+        )
+        default = catalog.toolboxes["strix-halo-llama-rocm-10-0"]
+        self.assertNotIn("server_entry", (default.backend_config or {}))
 
     def test_strix_halo_spans_multiple_image_repositories(self) -> None:
         catalog = load_toolbox_catalog()

@@ -498,6 +498,9 @@ def _validate_llama_toolbox_backend_config(
     config: dict[str, Any], context: str
 ) -> None:
     """Validate optional llama.cpp policy owned by one toolbox/fork."""
+    server_entry = config.get("server_entry", "llama-server")
+    if not isinstance(server_entry, str) or not server_entry.strip():
+        raise CatalogError(f"{context}.server_entry must be a non-empty string")
     profiles = config.get("launch_profiles", {})
     if not isinstance(profiles, dict):
         raise CatalogError(f"{context}.launch_profiles must be an object")

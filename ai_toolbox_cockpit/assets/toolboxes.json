@@ -2269,6 +2269,9 @@
       "description": "mx-llama.cpp build b12717 fork with px-unit kernels and MTP, on TheRock ROCm 10.1. For deprecated gfx906 (MI50/MI60/Radeon VII) - no upstream ROCm build exists.",
       "runtime_profile": "amd-rocm",
       "supports_load_mode": true,
+      "backend_config": {
+        "server_entry": "--server"
+      },
       "features": {
         "interactive": "supported",
         "server": "supported",

@@ -44,6 +44,25 @@ class BackendCommandTests(unittest.TestCase):
         self.assertEqual(command[command.index("--mmproj") + 1], "/models/Qwen3.6-27B-MTP-GGUF/mmproj-model.gguf")
         self.assertIn("draft-mtp", command)
 
+    def test_llama_server_entry_selects_container_entrypoint_tool(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model = root / "model.gguf"
+            model.touch()
+            with patch(
+                "ai_toolbox_cockpit.backends.llama_cpp.model_manager.get_models_dir",
+                return_value=root,
+            ):
+                for entry, expected in (("llama-server", "llama-server"), ("--server", "--server")):
+                    with self.subTest(entry=entry):
+                        command = build_llama(
+                            "podman", "docker.io/mixa3607/llama.cpp-gfx906:b12717", str(model), 65536,
+                            True, False, "", engine_args=ROCM_ARGS, server_entry=entry,
+                        )
+                        model_index = command.index("-m")
+                        self.assertEqual(command[model_index - 1], expected)
+                        self.assertEqual(command[model_index + 1], "/models/model.gguf")
+
     def test_llama_includes_explicit_gpu_layers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

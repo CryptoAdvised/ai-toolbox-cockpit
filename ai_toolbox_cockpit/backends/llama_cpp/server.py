@@ -244,6 +244,12 @@ class LlamaCppServerPanel(BackendServerPanel):
         profiles = (toolbox.backend_config or {}).get("launch_profiles", {}) if toolbox else {}
         return apply_launch_profile(toolbox, profile_id if profile_id in profiles else "")
 
+    @staticmethod
+    def _server_entry(toolbox) -> str:
+        if not toolbox:
+            return "llama-server"
+        return str((toolbox.backend_config or {}).get("server_entry") or "llama-server")
+
     def refresh_launch_profiles(self) -> None:
         toolbox = self.app.toolbox_catalog.toolboxes.get(self.query_one("#llama-image", SearchableSelect).value)
         profiles = (toolbox.backend_config or {}).get("launch_profiles", {}) if toolbox else {}
@@ -524,7 +530,7 @@ class LlamaCppServerPanel(BackendServerPanel):
             if engine not in {"podman", "docker"} or not toolbox:
                 raise ValueError("Select an engine and installed image")
             arguments = upgrade_groups_for_podman(engine, list(self.app.toolbox_catalog.runtime_profiles[toolbox.runtime_profile].engine_args))
-            command = [engine, "run", "--rm", "--network=none", *arguments, toolbox.image, "llama-server", "--list-devices"]
+            command = [engine, "run", "--rm", "--network=none", *arguments, toolbox.image, self._server_entry(toolbox), "--list-devices"]
             with self.app.suspend():
                 output = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
             self.query_one("#llama-device-inventory", Static).update(output.strip())
@@ -802,6 +808,7 @@ class LlamaCppServerPanel(BackendServerPanel):
                     if toolbox.supports_load_mode
                     else ""
                 ),
+                server_entry=self._server_entry(toolbox),
             )
         except ValueError as error:
             self.notify(str(error), severity="error")
