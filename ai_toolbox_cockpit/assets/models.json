@@ -4553,11 +4553,11 @@
           "files": [
             {
               "path": "IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00001-of-00002.gguf",
-              "size_bytes": 29600000000
+              "size_bytes": 29608446496
             },
             {
               "path": "IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00002-of-00002.gguf",
-              "size_bytes": 28800000000
+              "size_bytes": 28800138432
             }
           ]
         },
