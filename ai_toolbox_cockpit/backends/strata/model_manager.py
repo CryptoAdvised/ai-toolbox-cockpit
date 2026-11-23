@@ -33,8 +33,8 @@ class StrataModel:
             if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or '..' in PurePosixPath(path).parts or any(c in path for c in '\\:\n\r\0') or path.startswith('-'):
                 raise ValueError('Strata model paths must be safe relative paths')
         files = tuple((item['path'], item['size_bytes']) for item in entry['files'])
-        if len(files) != 33 or len({p for p, _ in files}) != 33 or any(type(n) is not int or n <= 0 for _, n in files):
-            raise ValueError('Select the complete qualified 33-shard AtomicChat artifact')
+        if not files or len({p for p, _ in files}) != len(files) or any(type(n) is not int or n <= 0 for _, n in files):
+            raise ValueError('Strata model requires at least one unique shard with positive integer size_bytes')
         return cls(*(entry[k] for k in ('id','name','repo','revision','directory')), files)
 
     @property
