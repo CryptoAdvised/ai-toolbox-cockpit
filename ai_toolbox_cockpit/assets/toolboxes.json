@@ -2312,6 +2312,27 @@
           }
         }
       }
+    },
+    {
+      "id": "cross-llama-vulkan-ggml",
+      "backend": "llama_cpp",
+      "name": "llama.cpp \u00b7 ggml.org official Vulkan",
+      "container_name": "cross-llama-vulkan-ggml",
+      "group": "Official Toolboxes",
+      "image": "ghcr.io/ggml-org/llama.cpp:full-vulkan",
+      "channel": "stable",
+      "maturity": "stable",
+      "description": "Official ggml.org llama.cpp Vulkan build for any Vulkan GPU host. llama-server parameters are passed to the original image; select the GPU devices and how the model is split across them.",
+      "runtime_profile": "vulkan",
+      "supports_load_mode": true,
+      "backend_config": {
+        "server_entry": "--server"
+      },
+      "features": {
+        "interactive": "supported",
+        "server": "supported",
+        "models": "supported"
+      }
     }
   ],
   "platforms": [
@@ -2422,6 +2443,17 @@
       "defaults": {
         "llama_cpp": "mi50-llama-rocm-10.1",
         "vllm": "mi50-vllm-0201-rocm-7-2-1"
+      }
+    },
+    {
+      "id": "cross",
+      "name": "Cross Platform",
+      "description": "Any host with Vulkan GPUs \u00b7 official ggml.org llama.cpp build \u00b7 multi-GPU via Vulkan device selection and tensor split",
+      "toolbox_ids": [
+        "cross-llama-vulkan-ggml"
+      ],
+      "defaults": {
+        "llama_cpp": "cross-llama-vulkan-ggml"
       }
     }
   ]

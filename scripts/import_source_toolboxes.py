@@ -36,16 +36,36 @@ def main() -> None:
     llama = load(args.llama)
     ds4 = load(args.ds4)
     existing = load(args.existing)
+    platform_meta = {
+        "strix-halo": ("AMD Strix Halo", "Ryzen AI Max, gfx1151"),
+        "r9700": ("AMD Radeon AI PRO R9700", "RDNA 4, gfx1201"),
+        "gb10": ("NVIDIA GB10", "DGX Spark / GB10 catalogue pending"),
+        "intel-b70": ("Intel Arc B70", "Battlemage / Level Zero"),
+    }
     retained = [
         item for item in existing["toolboxes"]
         if item["backend"] in {"vllm", "comfyui", "r9v", "radiance"}
     ]
     toolboxes = []
-    assignments: dict[str, list[str]] = {"strix-halo": [], "r9700": [], "gb10": [], "intel-b70": []}
-    defaults: dict[str, dict[str, str]] = {key: {} for key in assignments}
+    assignments: dict[str, list[str]] = {}
+    defaults: dict[str, dict[str, str]] = {}
+    platform_names: dict[str, tuple[str, str]] = {
+        platform["id"]: (platform["name"], platform.get("description", ""))
+        for platform in existing["platforms"]
+    }
+
+    def ensure_platform(platform_id: str, name: str = "", description: str = "") -> None:
+        if platform_id not in assignments:
+            platform_names[platform_id] = platform_meta.get(platform_id, (name or platform_id, description))
+            assignments[platform_id] = []
+            defaults[platform_id] = {}
+
+    for platform_id in platform_names:
+        ensure_platform(platform_id)
 
     for platform in llama["platforms"]:
         platform_id = platform["id"]
+        ensure_platform(platform_id, platform.get("name", ""), platform.get("description", ""))
         for group in platform["groups"]:
             stable = "official" in group["name"].lower()
             for source in group["toolboxes"]:
@@ -77,6 +97,7 @@ def main() -> None:
     for group in ds4["groups"]:
         for source in group["toolboxes"]:
             platform_id = "r9700" if "gfx1201" in source["name"] else "strix-halo"
+            ensure_platform(platform_id)
             toolbox_id = f"{platform_id}-{slug(source['name'])}"
             channel = "experimental" if "nightly" in source["name"] or "gfx1201" in source["name"] else "stable"
             toolboxes.append({
@@ -119,12 +140,6 @@ def main() -> None:
             if toolbox_id in retained_ids and toolbox_id in assignments[platform["id"]]:
                 defaults[platform["id"]][backend] = toolbox_id
 
-    platform_meta = {
-        "strix-halo": ("AMD Strix Halo", "Ryzen AI Max, gfx1151"),
-        "r9700": ("AMD Radeon AI PRO R9700", "RDNA 4, gfx1201"),
-        "gb10": ("NVIDIA GB10", "DGX Spark / GB10 catalogue pending"),
-        "intel-b70": ("Intel Arc B70", "Battlemage / Level Zero"),
-    }
     output = {
         "schema_version": 3,
         "runtime_profiles": existing["runtime_profiles"],
@@ -132,12 +147,12 @@ def main() -> None:
         "platforms": [
             {
                 "id": platform_id,
-                "name": platform_meta[platform_id][0],
-                "description": platform_meta[platform_id][1],
+                "name": platform_names[platform_id][0],
+                "description": platform_names[platform_id][1],
                 "toolbox_ids": assignments[platform_id],
                 "defaults": defaults[platform_id],
             }
-            for platform_id in ("strix-halo", "r9700", "gb10", "intel-b70")
+            for platform_id in platform_names
         ],
     }
     args.output.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")

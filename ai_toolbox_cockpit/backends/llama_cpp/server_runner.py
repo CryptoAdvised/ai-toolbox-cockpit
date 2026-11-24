@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from .model_manager import resolve_model_path
 from ai_toolbox_cockpit.runtime.engines import adapt_nvidia_runtime_args
@@ -20,7 +21,7 @@ def get_server_rdma_args(
         return []
     return container_rdma_args(engine, rdma_path)
 
-def build_server_cmd(engine: str, image: str, model_path: str, context_size: int, use_fa: bool, use_no_mmap: bool, custom_args: str, host: str = "localhost", port: str = "8080", ngl: int | None = None, hip_devices: str = "", platform_id: str = "", engine_args: list[str] = None, kv_cache_type: str = "", supports_load_mode: bool = False, api_key: str = "", vision_projector_path: str = "", draft_model_path: str = "", mtp_draft_model_path: str = "", batch_size: int | None = None, ubatch_size: int | None = None, parallel_sequences: int | None = None, load_mode: str = "", runtime_profile: str = "", server_entry: str = "llama-server") -> list[str]:
+def build_server_cmd(engine: str, image: str, model_path: str, context_size: int, use_fa: bool, use_no_mmap: bool, custom_args: str, host: str = "localhost", port: str = "8080", ngl: int | None = None, hip_devices: str = "", platform_id: str = "", engine_args: list[str] = None, kv_cache_type: str = "", supports_load_mode: bool = False, api_key: str = "", vision_projector_path: str = "", draft_model_path: str = "", mtp_draft_model_path: str = "", batch_size: int | None = None, ubatch_size: int | None = None, parallel_sequences: int | None = None, load_mode: str = "", runtime_profile: str = "", server_entry: str = "llama-server", tensor_split: str = "", split_mode: str = "layer", main_gpu: str = "") -> list[str]:
     from .model_manager import get_models_dir
     from .config import get_model_config
     config = get_model_config(model_path) or {}
@@ -148,6 +149,25 @@ def build_server_cmd(engine: str, image: str, model_path: str, context_size: int
     cmd.extend(["-c", str(context_size)])
     if ngl is not None:
         cmd.extend(["-ngl", str(ngl)])
+    if tensor_split:
+        parts = [part.strip() for part in str(tensor_split).split(",") if part.strip()]
+        if not parts or any(not re.fullmatch(r"\d+(\.\d+)?", part) for part in parts):
+            raise ValueError("Tensor split must be comma-separated non-negative numbers, e.g. 1,1")
+        device_count = len([part for part in str(hip_devices).split(",") if part.strip()])
+        if device_count and len(parts) > device_count:
+            raise ValueError(
+                f"Tensor split lists {len(parts)} shares but the GPU devices field lists {device_count} devices"
+            )
+        cmd.extend(["--tensor-split", ",".join(parts)])
+    if split_mode:
+        if split_mode not in {"none", "layer", "row", "tensor"}:
+            raise ValueError(f"Unsupported split mode: {split_mode}")
+        if split_mode != "layer":
+            cmd.extend(["--split-mode", split_mode])
+    if main_gpu:
+        if not str(main_gpu).isdigit() or int(main_gpu) < 0:
+            raise ValueError("Main GPU must be a non-negative integer or empty.")
+        cmd.extend(["--main-gpu", str(int(main_gpu))])
     cmd.extend([
         "--host", "0.0.0.0",
         "--port", str(port),

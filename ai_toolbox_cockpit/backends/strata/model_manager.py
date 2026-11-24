@@ -10,6 +10,12 @@ from . import dsv41
 from ai_toolbox_cockpit.settings import get_backend_settings, save_backend_settings
 
 
+def safe_relative_path(path):
+    return (isinstance(path, str) and path and not PurePosixPath(path).is_absolute()
+            and '..' not in PurePosixPath(path).parts and not any(c in path for c in '\\:\n\r\0')
+            and not path.startswith('-'))
+
+
 @dataclass(frozen=True)
 class StrataModel:
     id: str
@@ -23,6 +29,8 @@ class StrataModel:
     def from_entry(cls, entry):
         if entry.get('family') == 'deepseek41':
             return dsv41.StrataDsv41Model.from_entry(entry)
+        if entry.get('family') == 'qwen38':
+            return StrataQwenModel.from_entry(entry)
         for key in ('id', 'name', 'repo', 'revision', 'directory'):
             if not isinstance(entry.get(key), str) or not entry[key]:
                 raise ValueError(f'Strata model requires {key}')
@@ -30,16 +38,63 @@ class StrataModel:
             raise ValueError('Strata models require an immutable revision')
         paths = [entry['directory']] + [item['path'] for item in entry['files']]
         for path in paths:
-            if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or '..' in PurePosixPath(path).parts or any(c in path for c in '\\:\n\r\0') or path.startswith('-'):
+            if not safe_relative_path(path):
                 raise ValueError('Strata model paths must be safe relative paths')
         files = tuple((item['path'], item['size_bytes']) for item in entry['files'])
-        if not files or len({p for p, _ in files}) != len(files) or any(type(n) is not int or n <= 0 for _, n in files):
-            raise ValueError('Strata model requires at least one unique shard with positive integer size_bytes')
+        if len(files) != 33 or len({p for p, _ in files}) != 33 or any(type(n) is not int or n <= 0 for _, n in files):
+            raise ValueError('Select the complete qualified 33-shard AtomicChat artifact')
         return cls(*(entry[k] for k in ('id','name','repo','revision','directory')), files)
 
     @property
     def platform_id(self):
         return 'intel-b70'
+
+    @property
+    def size_bytes(self):
+        return sum(size for _,size in self.files)
+
+
+@dataclass(frozen=True)
+class StrataQwenModel:
+    """Qwen3.8 Flash Next artifacts pinned to one complete shard set."""
+    id: str
+    name: str
+    repo: str
+    revision: str
+    directory: str
+    files: tuple[tuple[str, int], ...]
+    family: str = 'qwen38'
+    platform_id: str = 'intel-b70'
+
+    @classmethod
+    def from_entry(cls, entry):
+        for key in ('id', 'name', 'repo', 'revision', 'directory'):
+            if not isinstance(entry.get(key), str) or not entry[key]:
+                raise ValueError(f'Strata model requires {key}')
+        if not re.fullmatch(r'[0-9a-f]{40}', entry['revision']):
+            raise ValueError('Strata models require an immutable revision')
+        paths = [entry['directory']] + [item['path'] for item in entry['files']]
+        for path in paths:
+            if not safe_relative_path(path):
+                raise ValueError('Strata model paths must be safe relative paths')
+        files = tuple((item['path'], item['size_bytes']) for item in entry['files'])
+        if len({p for p, _ in files}) != len(files) or any(type(n) is not int or n <= 0 for _, n in files):
+            raise ValueError('Strata model requires unique shards with positive integer size_bytes')
+        totals = set()
+        indexes = {}
+        for path, _ in files:
+            match = re.search(r'(\d+)-of-(\d+)\.gguf$', PurePosixPath(path).name)
+            if not match:
+                raise ValueError('Strata Qwen shards must be named NN-of-MM.gguf')
+            index, total = int(match[1]), int(match[2])
+            totals.add(total)
+            indexes.setdefault(total, set()).add(index)
+        if len(totals) != 1:
+            raise ValueError('Select the complete Strata Qwen shard set')
+        total = totals.pop()
+        if indexes[total] != set(range(1, total + 1)):
+            raise ValueError('Select the complete Strata Qwen shard set')
+        return cls(*(entry[k] for k in ('id','name','repo','revision','directory')), files)
 
     @property
     def size_bytes(self):

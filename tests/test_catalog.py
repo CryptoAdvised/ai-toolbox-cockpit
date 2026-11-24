@@ -37,10 +37,20 @@ class CatalogTests(unittest.TestCase):
     def test_toolbox_catalog_loads_and_has_full_image_references(self) -> None:
         catalog = load_toolbox_catalog()
         self.assertEqual(catalog.schema_version, 3)
-        self.assertEqual({platform.id for platform in catalog.platforms}, {"strix-halo", "r9700", "gb10", "intel-b70", "mi50"})
+        self.assertEqual({platform.id for platform in catalog.platforms}, {"strix-halo", "r9700", "gb10", "intel-b70", "mi50", "cross"})
         for toolbox in catalog.toolboxes.values():
             self.assertIn("/", toolbox.image)
             self.assertTrue(":" in toolbox.image or "@" in toolbox.image)
+
+    def test_cross_platform_catalogues_the_official_ggml_vulkan_image(self) -> None:
+        catalog = load_toolbox_catalog()
+        platform = catalog.platform("cross")
+        self.assertEqual(platform.name, "Cross Platform")
+        self.assertEqual(platform.defaults["llama_cpp"], "cross-llama-vulkan-ggml")
+        toolbox = catalog.toolboxes["cross-llama-vulkan-ggml"]
+        self.assertEqual(toolbox.image, "ghcr.io/ggml-org/llama.cpp:full-vulkan")
+        self.assertEqual(toolbox.runtime_profile, "vulkan")
+        self.assertEqual((toolbox.backend_config or {}).get("server_entry"), "--server")
 
     def test_mi50_llama_toolbox_dispatches_through_the_container_entrypoint(self) -> None:
         catalog = load_toolbox_catalog()

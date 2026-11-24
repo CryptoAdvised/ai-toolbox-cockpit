@@ -169,6 +169,16 @@ class LlamaCppServerPanel(BackendServerPanel):
                 yield Input(placeholder="Device indices for the selected backend", id="llama-devices")
                 yield Button("Discover GPUs", id="llama-discover-devices")
             yield Static("", id="llama-device-inventory", classes="panel-copy")
+            with Horizontal(classes="compact-fields"):
+                with Vertical(classes="compact-field"):
+                    yield Label("Tensor split", id="llama-tensor-split-label", classes="field-label")
+                    yield Input(placeholder="Proportions per GPU, e.g. 1,1", id="llama-tensor-split")
+                with Vertical(classes="compact-field"):
+                    yield Label("Split mode", id="llama-split-mode-label", classes="field-label")
+                    yield SearchableSelect("Select how the model is split across GPUs", id="llama-split-mode")
+                with Vertical(classes="compact-field"):
+                    yield Label("Main GPU", id="llama-main-gpu-label", classes="field-label")
+                    yield Input(placeholder="GPU index, e.g. 0", id="llama-main-gpu")
             with Horizontal(classes="inline-row"):
                 yield Label("API key", id="llama-api-key-label", classes="inline-label")
                 yield Input(placeholder="Optional llama-server API key", password=True, id="llama-api-key")
@@ -191,6 +201,14 @@ class LlamaCppServerPanel(BackendServerPanel):
         engine.set_options(options)
         if options:
             engine.value = options[0][1]
+        split_mode = self.query_one("#llama-split-mode", SearchableSelect)
+        split_mode.set_options([
+            ("Layer \u00b7 split layers and KV across GPUs (default)", "layer"),
+            ("Row \u00b7 split weights across GPUs by rows", "row"),
+            ("Tensor \u00b7 split weights and KV across GPUs (experimental)", "tensor"),
+            ("Single GPU", "none"),
+        ])
+        split_mode.value = "layer"
         kv = self.query_one("#llama-kv-type", SearchableSelect)
         kv.set_options([("Default (no quantization)", "")] + [(value, value) for value in KV_TYPES])
         kv.value = ""
@@ -778,6 +796,13 @@ class LlamaCppServerPanel(BackendServerPanel):
                 severity="error",
             )
             return
+        main_gpu = self.query_one("#llama-main-gpu", Input).value.strip()
+        if main_gpu and (not main_gpu.isdigit() or int(main_gpu) < 0):
+            self.notify(
+                "Main GPU must be a non-negative integer or empty.",
+                severity="error",
+            )
+            return
         try:
             command = build_server_cmd(
                 engine=engine,
@@ -809,6 +834,9 @@ class LlamaCppServerPanel(BackendServerPanel):
                     else ""
                 ),
                 server_entry=self._server_entry(toolbox),
+                tensor_split=self.query_one("#llama-tensor-split", Input).value,
+                split_mode=self.query_one("#llama-split-mode", SearchableSelect).value,
+                main_gpu=main_gpu,
             )
         except ValueError as error:
             self.notify(str(error), severity="error")

@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from textual.widgets import Input, Label, TabbedContent
 from ai_toolbox_cockpit.app import AiToolboxCockpitApp
-from ai_toolbox_cockpit.catalog import load_toolbox_catalog
+from ai_toolbox_cockpit.catalog import load_model_catalog, load_toolbox_catalog
 from ai_toolbox_cockpit.catalog.schema import ToolboxCatalog
 from ai_toolbox_cockpit.views.engine_choices import engine_choices
 from ai_toolbox_cockpit.runtime.engines import ContainerEngine
@@ -97,8 +97,12 @@ class QuadNativeNavigationTests(IsolatedAsyncioTestCase):
             app.query_one('#platform-select', SearchableSelect).value = 'intel-b70'
             await pilot.pause()
             models = app.query_one('#strata-model', SearchableSelect)._options
-            self.assertEqual(len(models), 1)
-            self.assertNotIn('v41', models[0][1])
+            b70_models = {entry['id'] for entry in load_model_catalog().backends['strata'].entries
+                          if entry.get('platform_id', 'intel-b70') == 'intel-b70'}
+            self.assertGreaterEqual(len(b70_models), 1)
+            self.assertEqual({model_id for _, model_id in models}, b70_models)
+            self.assertNotIn('v41', {label for label, _ in models})
+            self.assertNotIn('v41', {model_id for _, model_id in models})
             self.assertEqual({v for _, v in app.query_one('#strata-speculation', SearchableSelect)._options}, {'baseline', 'mtp'})
 
 

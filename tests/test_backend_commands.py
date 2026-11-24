@@ -63,6 +63,46 @@ class BackendCommandTests(unittest.TestCase):
                         self.assertEqual(command[model_index - 1], expected)
                         self.assertEqual(command[model_index + 1], "/models/model.gguf")
 
+    def test_llama_multi_gpu_split_flags_reach_the_server(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model = root / "model.gguf"
+            model.touch()
+            with patch(
+                "ai_toolbox_cockpit.backends.llama_cpp.model_manager.get_models_dir",
+                return_value=root,
+            ):
+                baseline = build_llama(
+                    "podman", "ghcr.io/ggml-org/llama.cpp:full-vulkan", str(model), 4096,
+                    True, False, "", hip_devices="0,1", runtime_profile="vulkan",
+                    engine_args=ROCM_ARGS, server_entry="--server",
+                )
+                self.assertEqual(baseline[baseline.index("-m") - 1], "--server")
+                self.assertIn("GGML_VK_VISIBLE_DEVICES=0,1", baseline)
+                self.assertNotIn("--tensor-split", baseline)
+                self.assertNotIn("--split-mode", baseline)
+                self.assertNotIn("--main-gpu", baseline)
+                command = build_llama(
+                    "podman", "ghcr.io/ggml-org/llama.cpp:full-vulkan", str(model), 4096,
+                    True, False, "", hip_devices="0,1", runtime_profile="vulkan",
+                    engine_args=ROCM_ARGS, server_entry="--server",
+                    tensor_split="1,1", split_mode="row", main_gpu="0",
+                )
+                self.assertEqual(command[command.index("--tensor-split") + 1], "1,1")
+                self.assertEqual(command[command.index("--split-mode") + 1], "row")
+                self.assertEqual(command[command.index("--main-gpu") + 1], "0")
+                with self.assertRaisesRegex(ValueError, "non-negative"):
+                    build_llama(
+                        "podman", "image", str(model), 4096, True, False, "",
+                        tensor_split="1,abc",
+                    )
+                with self.assertRaisesRegex(ValueError, "lists 3 shares"):
+                    build_llama(
+                        "podman", "image", str(model), 4096, True, False, "",
+                        hip_devices="0,1", runtime_profile="vulkan",
+                        tensor_split="1,1,1",
+                    )
+
     def test_llama_includes_explicit_gpu_layers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
