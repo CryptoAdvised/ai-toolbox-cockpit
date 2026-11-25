@@ -1542,7 +1542,7 @@
       "name": "b70-llama-sycl",
       "container_name": "b70-llama-sycl",
       "group": "Official Toolboxes",
-      "image": "docker.io/kyuz0/intel-b70-ai-toolboxes:sycl",
+      "image": "docker.io/kyuz0/intel-b70-ai-toolboxes:sycl_20261119T195920",
       "channel": "stable",
       "maturity": "stable",
       "description": "Intel oneAPI SYCL backend",
