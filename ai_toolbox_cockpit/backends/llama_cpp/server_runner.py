@@ -40,7 +40,7 @@ def build_server_cmd(engine: str, image: str, model_path: str, context_size: int
     
     if engine_args is None:
         # fallback based on image/platform_id
-        if "intel" in image.lower() or "intel" in platform_id.lower():
+        if "intel" in image.lower() or "intel" in platform_id.lower():         
             engine_args = [
                 "--device", "/dev/dri",
                 "--group-add", "video",
@@ -79,6 +79,9 @@ def build_server_cmd(engine: str, image: str, model_path: str, context_size: int
     cmd = [
         engine, "run", "--rm", "-it", "--name", "llama-cockpit-server"
     ]
+    if "intel" in image.lower() or "intel" in platform_id.lower():
+        cmd.extend(["-e", "GGML_SYCL_XMX_GATHER_TYPES=0"])   
+        
     cmd.extend(engine_args)
     
     if hip_devices:
